@@ -6,6 +6,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using WebApi.VehiclesAuction.Api.Models;
+using WebApi.VehiclesAuction.Domain.Interfaces.Services;
+using WebApi.VehiclesAuction.Domain.Services;
 
 namespace WebApi.VehiclesAuction.Api.Controllers
 {
@@ -17,36 +19,41 @@ namespace WebApi.VehiclesAuction.Api.Controllers
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IConfiguration _configuration;
+        private readonly IParticipantServices _participantServices;
 
         public AuthController(UserManager<IdentityUser> userManager,
         SignInManager<IdentityUser> signInManager,
         IConfiguration configuration,
-        RoleManager<IdentityRole> roleManager)
+        RoleManager<IdentityRole> roleManager,
+        IParticipantServices participantServices)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
             _roleManager = roleManager;
+            _participantServices = participantServices;
         }
 
         [HttpPost("register-user")]
-        public async Task<IActionResult> RegisterUser([FromBody] RegisterUserViewModel registerViewModel)
+        public async Task<IActionResult> RegisterUser([FromBody] RegisterUserViewModel registerViewModel, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new JsonResponse(false, "Erro ao tentar realizar o cadastro. Por favor, verifique os campos e tente novamente."));
 
-            // TODO: Criar validação pra salvar usuario
-
-            var newUser = new IdentityUser { UserName = registerViewModel.Name, Email = registerViewModel.Email };
-
-            var user = await _userManager.FindByEmailAsync(newUser.Email);
+            var user = await _userManager.FindByEmailAsync(registerViewModel.Email);
             if (user is not null)
                 return BadRequest(new JsonResponse(false, $"Usuário já cadastrado para o email informado."));
 
+            var createParticipant = await _participantServices.AddParticipant(registerViewModel.Name, registerViewModel.Email, registerViewModel.Cep, cancellationToken);
+
+            if (!createParticipant.Success)
+                return BadRequest(new JsonResponse(false, createParticipant.GetErrorMessage()));
+
+            var newUser = new IdentityUser { UserName = registerViewModel.Name, Email = registerViewModel.Email };
             var createUser = await _userManager.CreateAsync(newUser!, registerViewModel.Password);
+
             if (!createUser.Succeeded)
                 return BadRequest(new JsonResponse(false, $"Erro ao tentar realizar o cadastro. Por favor tente novamente..."));
-
 
             if (registerViewModel.UserType is 1)
             {
