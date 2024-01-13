@@ -2,5 +2,6 @@
 {
     public interface IParticipantServices
     {
+        Task<bool> AddParticipant();
     }
 }

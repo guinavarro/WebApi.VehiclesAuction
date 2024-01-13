@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\WebApi.VehiclesAuction.Domain\WebApi.VehiclesAuction.Domain.csproj" />
+    <ProjectReference Include="..\..\WebApi.VehiclesAuction.Domain\WebApi.VehiclesAuction.Domain\WebApi.VehiclesAuction.Domain.csproj" />
     <ProjectReference Include="..\..\WebApi.VehiclesAuction.Infra\WebApi.VehiclesAuction.Infra\WebApi.VehiclesAuction.Infra.csproj" />
   </ItemGroup>
 

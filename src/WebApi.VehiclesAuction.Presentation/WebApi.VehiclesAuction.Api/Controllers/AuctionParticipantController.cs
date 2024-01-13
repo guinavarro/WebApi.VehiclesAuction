@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using WebApi.VehiclesAuction.Domain.Interfaces.Clients;
 
 namespace WebApi.VehiclesAuction.Api.Controllers
 {
@@ -9,6 +10,13 @@ namespace WebApi.VehiclesAuction.Api.Controllers
     //[Authorize]
     public class AuctionParticipantController : ControllerBase
     {
+        private readonly IViaCepClient _viaCepClient;
+
+        public AuctionParticipantController(IViaCepClient viaCepClient)
+        {
+            _viaCepClient = viaCepClient;
+        }
+
         [HttpGet("example")]
         [Authorize(Roles = "Participant")]
 
@@ -34,6 +42,14 @@ namespace WebApi.VehiclesAuction.Api.Controllers
                 Message = "Você está autenticado como admin!",
                 Username = username
             });
+        }
+
+        [HttpPost("cep")]
+        public async Task<IActionResult> Cep([FromForm] string cep)
+        {
+            var teste = await _viaCepClient.FindByZip(cep);
+
+            return Ok(teste);
         }
     }
 }

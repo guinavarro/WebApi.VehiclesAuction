@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using WebApi.VehiclesAuction.Domain.Clients;
+using WebApi.VehiclesAuction.Domain.Interfaces.Clients;
 using WebApi.VehiclesAuction.Domain.Interfaces.Repository;
 using WebApi.VehiclesAuction.Domain.Interfaces.Services;
 using WebApi.VehiclesAuction.Domain.Services;
@@ -22,6 +24,8 @@ namespace WebApi.VehiclesAuction.Infra
 
             services.AddScoped<IParticipantServices, ParticipantServices>();
             services.AddScoped<IAuctionServices, AuctionServices>();
+
+            services.AddScoped<IViaCepClient, ViaCepClient>();
 
             return services;
         }
