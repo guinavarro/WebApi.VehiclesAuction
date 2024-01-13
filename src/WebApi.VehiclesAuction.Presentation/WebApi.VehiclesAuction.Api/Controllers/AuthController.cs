@@ -34,7 +34,34 @@ namespace WebApi.VehiclesAuction.Api.Controllers
             _participantServices = participantServices;
         }
 
-        [HttpPost("register-user")]
+        [HttpPost("register-admin-user")]
+        public async Task<IActionResult> RegisterAdminUser([FromBody] RegisterAdminUserViewModel registerViewModel, CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new JsonResponse(false, "Erro ao tentar realizar o cadastro. Por favor, verifique os campos e tente novamente."));
+
+            var user = await _userManager.FindByEmailAsync(registerViewModel.Email);
+            if (user is not null)
+                return BadRequest(new JsonResponse(false, $"Usuário já cadastrado para o email informado."));
+
+            var newUser = new IdentityUser { UserName = registerViewModel.Name, Email = registerViewModel.Email };
+            var createUser = await _userManager.CreateAsync(newUser!, registerViewModel.Password);
+
+            if (!createUser.Succeeded)
+                return BadRequest(new JsonResponse(false, $"Erro ao tentar realizar o cadastro. Por favor tente novamente..."));
+
+            // Verifica se já existe a role criada na Base, se não existir, cria na hora
+            var checkAdminRole = await _roleManager.FindByNameAsync("Admin");
+            if (checkAdminRole is null)
+                await _roleManager.CreateAsync(new IdentityRole() { Name = "Admin" });
+
+            await _userManager.AddToRoleAsync(newUser, "Admin");
+
+            return Ok(new JsonResponse(true, "Cadastro realizado com sucesso!"));
+        }
+
+
+        [HttpPost("register-participant-user")]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterUserViewModel registerViewModel, CancellationToken cancellationToken)
         {
             if (!ModelState.IsValid)
@@ -55,27 +82,14 @@ namespace WebApi.VehiclesAuction.Api.Controllers
             if (!createUser.Succeeded)
                 return BadRequest(new JsonResponse(false, $"Erro ao tentar realizar o cadastro. Por favor tente novamente..."));
 
-            if (registerViewModel.UserType is 1)
-            {
-                // Verifica se já existe a role criada na Base, se não existir, cria na hora
-                var checkAdminRole = await _roleManager.FindByNameAsync("Admin");
-                if (checkAdminRole is null)                
-                    await _roleManager.CreateAsync(new IdentityRole() { Name = "Admin" });                
+            var checkParticipantRole = await _roleManager.FindByNameAsync("Participant");
+            if (checkParticipantRole is null)
+                await _roleManager.CreateAsync(new IdentityRole() { Name = "Participant" });
 
-                await _userManager.AddToRoleAsync(newUser, "Admin");
-            }
-            else
-            {
-                var checkParticipantRole = await _roleManager.FindByNameAsync("Participant");
-                if (checkParticipantRole is null)
-                    await _roleManager.CreateAsync(new IdentityRole() { Name = "Participant" });
+            await _userManager.AddToRoleAsync(newUser, "Participant");
 
-                await _userManager.AddToRoleAsync(newUser, "Participant");
-            }
-
-            return BadRequest(new JsonResponse(true, "Cadastro realizado com sucesso!"));
+            return Ok(new JsonResponse(true, "Cadastro realizado com sucesso!"));
         }
-
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserViewModel loginViewModel)
@@ -98,12 +112,22 @@ namespace WebApi.VehiclesAuction.Api.Controllers
             }
 
             var userRole = await _userManager.GetRolesAsync(user);
-            var token = GenerateJwtToken(user.UserName, user.Email, userRole.First());
+            int? participantId = null;
+
+            if (userRole.First() != "Admin")
+            {
+                var getParticipantId = await _participantServices.GetParticipantIdByEmail(loginViewModel.Email);
+
+                if (getParticipantId.Success)
+                    participantId = getParticipantId.Object;
+            }
+
+            var token = GenerateJwtToken(user.UserName, user.Email, userRole.First(), participantId);
             return Ok(new JsonResponse(true, $"Login realizado com sucesso. Token: {token}"));
         }
 
 
-        private string GenerateJwtToken(string userName, string email, string role)
+        private string GenerateJwtToken(string userName, string email, string role, int? participantId = null)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -111,9 +135,10 @@ namespace WebApi.VehiclesAuction.Api.Controllers
             {
                 new Claim(ClaimTypes.Name, userName),
                 new Claim(ClaimTypes.Email, email),
-                new Claim(ClaimTypes.Role, role)
-                // TODO: SALVAR O ID
+                new Claim(ClaimTypes.Role, role),
+                new Claim("ParticipantId", participantId != null ? participantId.ToString() : string.Empty)
             };
+
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],

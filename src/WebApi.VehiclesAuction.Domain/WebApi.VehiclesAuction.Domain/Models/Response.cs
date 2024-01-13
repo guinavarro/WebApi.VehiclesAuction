@@ -1,4 +1,6 @@
-﻿namespace WebApi.VehiclesAuction.Domain.Models
+﻿using System.Text;
+
+namespace WebApi.VehiclesAuction.Domain.Models
 {
     public sealed class Response<T>
     {
@@ -39,6 +41,20 @@
         public string GetErrorMessage()
         {
             return Errors.FirstOrDefault();
+        }
+        public string GetAllErrorsMessage()
+        {
+            var errorMessage = new StringBuilder();
+
+            if (Errors != null && Errors.Any())
+            {
+                foreach (var error in Errors)
+                {
+                    errorMessage.Append($" {error.ToString()}");
+                }
+            }
+
+            return errorMessage.ToString(); 
         }
     }
 }

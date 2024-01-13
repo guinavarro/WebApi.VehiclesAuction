@@ -16,12 +16,8 @@ namespace WebApi.VehiclesAuction.Infra.DbMapping
             builder.Property(x => x.Name).HasColumnName("NAME").HasColumnType("VARCHAR(100)").IsRequired(true);
             builder.Property(x => x.Description).HasColumnName("DESCRIPTION").HasColumnType("VARCHAR(500)").IsRequired(false);
             builder.Property(x => x.Brand).HasColumnName("BRAND").HasColumnType("VARCHAR(100)").IsRequired(true);
-            builder.Property(x => x.AuctionItemId).HasColumnName("AUCTION_ITEM_ID").HasColumnType("integer").IsRequired(true);
             builder.Property(x => x.Type).HasColumnName("TYPE").HasColumnType("integer").IsRequired(true).HasConversion<int>();
 
-            builder.HasOne(x => x.AuctionItem)
-                .WithOne(x => x.Item)
-                .HasForeignKey<Item>(x => x.AuctionItemId);
         }
     }
 }

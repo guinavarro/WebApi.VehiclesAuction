@@ -26,6 +26,7 @@ namespace WebApi.VehiclesAuction.Infra
             services.AddScoped<IAuctionServices, AuctionServices>();
 
             services.AddScoped<IViaCepClient, ViaCepClient>();
+            services.AddScoped<IEmailSender, EmailSender>();
 
             return services;
         }

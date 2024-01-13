@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WebApi.VehiclesAuction.Infra;
@@ -11,9 +12,11 @@ using WebApi.VehiclesAuction.Infra;
 namespace WebApi.VehiclesAuction.Infra.Migrations
 {
     [DbContext(typeof(VehiclesAuctionContext))]
-    partial class VehiclesAuctionContextModelSnapshot : ModelSnapshot
+    [Migration("20240113124350_UpdatedItemTable")]
+    partial class UpdatedItemTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -333,12 +336,8 @@ namespace WebApi.VehiclesAuction.Infra.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasDefaultValueSql("NOW()");
 
-                    b.Property<decimal?>("CurrentValue")
-                        .HasColumnType("decimal(10,2)")
-                        .HasColumnName("CURRENT_VALUE");
-
-                    b.Property<TimeSpan>("EndAtHours")
-                        .HasColumnType("time without time zone")
+                    b.Property<DateTime>("EndAt")
+                        .HasColumnType("timestamp without time zone")
                         .HasColumnName("END_AT");
 
                     b.Property<int>("ItemId")
@@ -354,8 +353,8 @@ namespace WebApi.VehiclesAuction.Infra.Migrations
                         .HasColumnType("decimal(10,2)")
                         .HasColumnName("MINIMUM_BID");
 
-                    b.Property<TimeSpan>("StartAtHours")
-                        .HasColumnType("time without time zone")
+                    b.Property<DateTime>("StartAt")
+                        .HasColumnType("timestamp without time zone")
                         .HasColumnName("START_AT");
 
                     b.Property<DateTime?>("UpdatedAt")

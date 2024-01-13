@@ -13,6 +13,11 @@ namespace WebApi.VehiclesAuction.Domain.Models.Entities
             City = city;
         }
 
+        public Address()
+        {
+            
+        }
+
         public string Street { get; set; }
         public string Number { get; set; }
         public string District { get; set; }

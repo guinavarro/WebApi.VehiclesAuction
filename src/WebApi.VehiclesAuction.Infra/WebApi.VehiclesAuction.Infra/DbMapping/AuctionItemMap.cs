@@ -17,8 +17,9 @@ namespace WebApi.VehiclesAuction.Infra.DbMapping
             builder.Property(x => x.ItemId).HasColumnName("ITEM_ID").HasColumnType("integer").IsRequired(true);
 
             builder.Property(x => x.MinimumBid).HasColumnName("MINIMUM_BID").HasColumnType("decimal(10,2)").IsRequired(false);
-            builder.Property(x => x.StartAt).HasColumnName("START_AT").HasColumnType("timestamp without time zone").IsRequired(true);
-            builder.Property(x => x.EndAt).HasColumnName("END_AT").HasColumnType("timestamp without time zone").IsRequired(true);
+            builder.Property(x => x.CurrentValue).HasColumnName("CURRENT_VALUE").HasColumnType("decimal(10,2)").IsRequired(false);
+            builder.Property(x => x.StartAtHours).HasColumnName("START_AT").HasColumnType("time without time zone").IsRequired(true);
+            builder.Property(x => x.EndAtHours).HasColumnName("END_AT").HasColumnType("time without time zone").IsRequired(true);
 
             builder.HasOne(x => x.Auction)
                 .WithMany(x => x.Items)
