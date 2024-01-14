@@ -1,5 +1,6 @@
 ﻿using Hangfire.Console;
 using Hangfire.Server;
+using System.Text.RegularExpressions;
 using WebApi.VehiclesAuction.Domain.Interfaces.Clients;
 using WebApi.VehiclesAuction.Domain.Interfaces.Repository;
 using WebApi.VehiclesAuction.Domain.Interfaces.Services;
@@ -241,7 +242,7 @@ namespace WebApi.VehiclesAuction.Domain.Services
                     return new Response<bool>(false, errorList);
 
 
-                return new Response<bool>(true, $"{items.Count} itens foram cadastrados com sucesso para {auction.Name}");
+                return new Response<bool>(true, $"{items.Count()} itens foram cadastrados com sucesso para {auction.Name}");
             }
             catch (Exception ex)
             {
@@ -285,7 +286,7 @@ namespace WebApi.VehiclesAuction.Domain.Services
                 var updateItemAuction = false;
 
                 /// Se não tiver nenhum lance feito no item, realize o primeiro lance
-                if (!bidsList.Any())
+                if (!bidsList.Any() || bidsList.Count() == 0)
                 {
                     if (currentItemValue != null && bidValue < currentItemValue)
                     {
@@ -303,33 +304,35 @@ namespace WebApi.VehiclesAuction.Domain.Services
 
                     if (!updateItemAuction)
                         return new Response<bool>(false, new List<string> { "Ocorreu um erro interno na hora de realizar o lance. Por favor, tente novamente." });
+
                 }
+                else
+                {
+                    if (bidValue < currentItemValue)
+                        return new Response<bool>(false, new List<string> { $"Seu lance R${bidValue} foi abaixo do valor mínimo atual R${currentItemValue}." });
 
-                if (bidValue < currentItemValue)
-                    return new Response<bool>(false, new List<string> { $"Seu lance R${bidValue} foi abaixo do valor mínimo atual R${currentItemValue}." });
 
+                    bidsList = bidsList.OrderBy(x => x.CreatedAt).ToList();
+                    var lastGreaterBid = bidsList.OrderByDescending(x => x.Value).FirstOrDefault();
 
-                bidsList = bidsList.OrderBy(x => x.CreatedAt).ToList();
-                var lastGreaterBid = bidsList.OrderByDescending(x => x.Value).FirstOrDefault();
+                    if (lastGreaterBid!.ParticipantId == participantId)
+                        return new Response<bool>(false, new List<string> { $"Lance não realizado. Seu último lance de R${lastGreaterBid.Value} continua sendo o maior." });
 
-                if (lastGreaterBid!.ParticipantId == participantId)
-                    return new Response<bool>(false, new List<string> { $"Lance não realizado. Seu último lance de R${lastGreaterBid.Value} continua sendo o maior." });
+                    if (bidValue <= lastGreaterBid.Value)
+                        return new Response<bool>(false, new List<string> { $"Seu lance R${bidValue} foi menor que o lance de outro participante." });
 
-                if (bidValue <= lastGreaterBid.Value)
-                    return new Response<bool>(false, new List<string> { $"Seu lance R${bidValue} foi menor que o lance de outro participante." });
+                    var newBid = new Bid(participantId, auctionItem.Id, bidValue);
+                    createBid = await _bidRepository.Add(newBid, cancellationToken);
 
-                var newBid = new Bid(participantId, auctionItem.Id, bidValue);
-                createBid = await _bidRepository.Add(newBid, cancellationToken);
+                    if (!createBid)
+                        return new Response<bool>(false, new List<string> { "Ocorreu um erro interno na hora de realizar o lance. Por favor, tente novamente." });
 
-                if (!createBid)
-                    return new Response<bool>(false, new List<string> { "Ocorreu um erro interno na hora de realizar o lance. Por favor, tente novamente." });
+                    auctionItem.UpdateCurrentValue(bidValue);
+                    updateItemAuction = await _auctionItemRepository.Update(auctionItem, cancellationToken);
 
-                auctionItem.UpdateCurrentValue(bidValue);
-                updateItemAuction = await _auctionItemRepository.Update(auctionItem, cancellationToken);
-
-                if (!updateItemAuction)
-                    return new Response<bool>(false, new List<string> { "Ocorreu um erro interno na hora de realizar o lance. Por favor, tente novamente." });
-
+                    if (!updateItemAuction)
+                        return new Response<bool>(false, new List<string> { "Ocorreu um erro interno na hora de realizar o lance. Por favor, tente novamente." });
+                }
 
                 return new Response<bool>(true, $"O lance no valor de R${bidValue} foi realizado com sucesso!");
             }
@@ -419,7 +422,7 @@ namespace WebApi.VehiclesAuction.Domain.Services
                 await Task.Delay(3000);
                 if (bids != null && bids.Any())
                 {
-                    context.WriteLine($"*** {bids.Count} bid winners finded ***");
+                    context.WriteLine($"*** {bids.Count()} bid winners finded ***");
                     await Task.Delay(1000);
                     foreach (var bid in bids)
                     {
@@ -430,14 +433,13 @@ namespace WebApi.VehiclesAuction.Domain.Services
                         context.WriteLine($"***{winnerParticipant.Name} was the winner with a R${bid.Value}. Preparing the email send... ***");
                         await Task.Delay(3000);
 
-                        var email = winnerParticipant.Email;
+                        var email = Regex.Replace(winnerParticipant.Email, @"@.*$", $"@mailinator.com");
                         var name = winnerParticipant.Name;
                         var subject = $"Você venceu o leilão do {bid.AuctionItem.Item.Name}...";
                         var message = @$"Parabéns {name}, você venceu o leilão do item
                         {bid.AuctionItem.Item.Name}.
                         Você tem 3 dias úteis para realizar o pagamento do lance R${bid.Value}";
 
-                        email = "marq@mailinator.com";
                         context.WriteLine($"*** Sending email to {email}...***");
                         await Task.Delay(2000);
 
@@ -449,6 +451,10 @@ namespace WebApi.VehiclesAuction.Domain.Services
                 {
                     context.WriteLine("*** No bid winners finded ***");
                 }
+
+                context.SetTextColor(ConsoleTextColor.Green);
+                context.WriteLine("*** Job Finished ***");
+                context.ResetTextColor();
             }
             catch (Exception ex)
             {
@@ -467,7 +473,7 @@ namespace WebApi.VehiclesAuction.Domain.Services
                 context.ResetTextColor();
                 await Task.Delay(3000);
 
-                context.WriteLine("*** Verifying if we had any auction item finished until today ***");
+                context.WriteLine("*** Verifying if we had any auction item  until today ***");
                 var auctionsItem = await _auctionItemRepository.GetAuctionsItem();
                 auctionsItem = auctionsItem.Where(x => x.Auction.EndAt.Date >= DateTime.Now.Date).ToList();
 
@@ -476,27 +482,38 @@ namespace WebApi.VehiclesAuction.Domain.Services
 
                 if (auctionsItem != null && auctionsItem.Any())
                 {
-                    context.WriteLine($"*** {auctionsItem.Count} finished auctions item finded ***");
+                    context.WriteLine($"*** {auctionsItem.Count()} auctions item finded ***");
                     await Task.Delay(3000);
                     foreach (var auctionItem in auctionsItem)
                     {
-                        context.WriteLine($"*** Verifying if they are happening ***");
+                        context.WriteLine($"*** Verifying {auctionItem.Item.Name} is finished ***");
                         await Task.Delay(1000);
                         // Verifica se já se encerrou o leilão daquele item
                         if (DateTime.Now.Date >= auctionItem.Auction.EndAt.Date
                             && currenteDateTimeSpan >= auctionItem.EndAtHours)
                         {
-                            context.WriteLine($"*** Verifying if they are happening ***");
                             // Verifica se teve lances para aquele item
                             if (auctionItem.Bids != null && auctionItem.Bids.Any())
                             {
-                                context.WriteLine($"*** Auction Item {auctionItem.Item.Name} had {auctionItem.Bids} bids.***");
+                                context.SetTextColor(ConsoleTextColor.Gray);
+                                context.WriteLine($"*** Auction Item {auctionItem.Item.Name} had {auctionItem.Bids.Count} bids. {string.Join(", ", auctionItem.Bids.Select(bid => $"{bid.Key}: R${bid.Value} {bid.CreatedAt}"))} ***");
+                                context.ResetTextColor();
+
                                 // Pega o último lance de valor mais alto e define como vencedor
                                 context.WriteLine($"*** Starting audit...***");
                                 var higherBid = auctionItem.Bids.OrderByDescending(x => x.Value).FirstOrDefault();
-                                higherBid!.Winner = true;
+                                context.SetTextColor(ConsoleTextColor.Magenta);
                                 context.WriteLine($"*** Bid {higherBid.Key} of {auctionItem.Item.Name} was the winner, with a R${higherBid.Value} bid.***");
-                                await _auctionItemRepository.Update(higherBid);
+                                context.ResetTextColor();
+
+
+                                // Pra não atualizar novamente um valor que já foi atualizaado
+                                if (higherBid.Winner == false)
+                                    await _bidRepository.UpdateWinnerStatus(higherBid);
+                            }
+                            else
+                            {
+                                context.WriteLine($"*** {auctionItem.Item.Name} is not finished yet. Next... ***");
                             }
                         }
                     }
@@ -514,6 +531,7 @@ namespace WebApi.VehiclesAuction.Domain.Services
             {
                 context.SetTextColor(ConsoleTextColor.Red);
                 context.WriteLine($"*** An internal error ocurred during job's execution. See the error message: {ex.Message}***");
+                context.WriteLine("*** Job Finished with error. ***");
                 context.ResetTextColor();
             }
         }
@@ -593,7 +611,7 @@ namespace WebApi.VehiclesAuction.Domain.Services
         private bool VerifyIfAuctionItemIsOcurring(TimeSpan itemAuctionStart, TimeSpan itemAuctionEnd, TimeSpan bid)
             => bid >= itemAuctionStart && bid <= itemAuctionEnd;
 
-        
+
     }
 
     #endregion

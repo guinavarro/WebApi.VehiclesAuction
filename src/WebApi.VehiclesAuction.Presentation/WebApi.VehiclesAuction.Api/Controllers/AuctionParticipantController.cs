@@ -24,6 +24,19 @@ namespace WebApi.VehiclesAuction.Api.Controllers
             _participantServices = participantServices;
         }
 
+        ///<remarks>
+        /// Busca todos os leilões ativos, independente da data de realização
+        /// </remarks>
+        /// <summary>
+        /// Busca leilões ativos
+        /// </summary>
+        /// <response code="200">Busca realizada com sucesso.</response>
+        /// <response code="400">Retorna erros de validação</response>
+        /// <response code="500">Retorna erros internos caso ocorram</response>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(JsonResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [HttpGet("get-all-availables-auction")]
         public async Task<IActionResult> GetAllAvailablesAuction(CancellationToken cancellationToken)
         {
@@ -39,6 +52,20 @@ namespace WebApi.VehiclesAuction.Api.Controllers
         }
 
 
+        ///<remarks>
+        /// Realiza o lance em um item através do Guid Key desse item
+        /// </remarks>
+        /// <summary>
+        /// Realiza lance em um item
+        /// </summary>
+        /// <param name="viewModel">Parâmetros para realizar o lance</param>
+        /// <response code="200">Lance realizado com sucesso.</response>
+        /// <response code="400">Retorna erros de validação</response>
+        /// <response code="500">Retorna erros internos caso ocorram</response>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(JsonResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [HttpPost("bid-auction-item")]
         public async Task<IActionResult> BidItem([FromForm] BidViewModel viewModel, CancellationToken cancellationToken)
         {
@@ -54,22 +81,19 @@ namespace WebApi.VehiclesAuction.Api.Controllers
             return Ok(new JsonResponse(true, createBid.Message!));
         }
 
-        //[HttpPost("viacep/teste")]
-        //public async Task<IActionResult> Cep([FromForm] string cep)
-        //{
-        //    var teste = await _viaCepClient.FindByZip(cep);
-
-        //    return Ok(teste);
-        //}
-
-        [HttpPost("email/teste")]
-        public async Task<IActionResult> Teste()
-        {
-           await _auctionServices.NotifyDailyWinners();
-
-            return Ok();
-        }
-
+        ///<remarks>
+        /// Retorna o Endereço cadastrado na base para o usuário autenticado
+        /// </remarks>
+        /// <summary>
+        /// Busca Endereço Usuário Autenticado
+        /// </summary>
+        /// <response code="200">Busca realizada com sucesso.</response>
+        /// <response code="400">Retorna erros de validação</response>
+        /// <response code="500">Retorna erros internos caso ocorram</response>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(JsonResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [HttpGet("get-authenticated-participant-address")]
         public async Task<IActionResult> GetAuthenticatedParticipantAddress(CancellationToken cancellationToken)
         {

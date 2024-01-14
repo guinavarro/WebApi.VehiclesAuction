@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace WebApi.VehiclesAuction.Infra.Migrations
 {
     /// <inheritdoc />
-    public partial class CriandoTabelas : Migration
+    public partial class FinalVersion : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -103,7 +103,6 @@ namespace WebApi.VehiclesAuction.Infra.Migrations
                     DESCRIPTION = table.Column<string>(type: "VARCHAR(500)", nullable: true),
                     BRAND = table.Column<string>(type: "VARCHAR(100)", nullable: false),
                     TYPE = table.Column<int>(type: "integer", nullable: false),
-                    AUCTION_ITEM_ID = table.Column<int>(type: "integer", nullable: false),
                     Key = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "uuid_generate_v4()"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false, defaultValueSql: "NOW()"),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
@@ -252,8 +251,9 @@ namespace WebApi.VehiclesAuction.Infra.Migrations
                     AUCTION_ID = table.Column<int>(type: "integer", nullable: false),
                     ITEM_ID = table.Column<int>(type: "integer", nullable: false),
                     MINIMUM_BID = table.Column<decimal>(type: "numeric(10,2)", nullable: true),
-                    START_AT = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    END_AT = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    CURRENT_VALUE = table.Column<decimal>(type: "numeric(10,2)", nullable: true),
+                    START_AT = table.Column<TimeSpan>(type: "time without time zone", nullable: false),
+                    END_AT = table.Column<TimeSpan>(type: "time without time zone", nullable: false),
                     Key = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "uuid_generate_v4()"),
                     CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false, defaultValueSql: "NOW()"),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)

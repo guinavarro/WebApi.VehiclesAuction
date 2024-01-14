@@ -12,8 +12,8 @@ using WebApi.VehiclesAuction.Infra;
 namespace WebApi.VehiclesAuction.Infra.Migrations
 {
     [DbContext(typeof(VehiclesAuctionContext))]
-    [Migration("20240113124350_UpdatedItemTable")]
-    partial class UpdatedItemTable
+    [Migration("20240114152710_FinalVersion")]
+    partial class FinalVersion
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -336,8 +336,12 @@ namespace WebApi.VehiclesAuction.Infra.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasDefaultValueSql("NOW()");
 
-                    b.Property<DateTime>("EndAt")
-                        .HasColumnType("timestamp without time zone")
+                    b.Property<decimal?>("CurrentValue")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("CURRENT_VALUE");
+
+                    b.Property<TimeSpan>("EndAtHours")
+                        .HasColumnType("time without time zone")
                         .HasColumnName("END_AT");
 
                     b.Property<int>("ItemId")
@@ -353,8 +357,8 @@ namespace WebApi.VehiclesAuction.Infra.Migrations
                         .HasColumnType("decimal(10,2)")
                         .HasColumnName("MINIMUM_BID");
 
-                    b.Property<DateTime>("StartAt")
-                        .HasColumnType("timestamp without time zone")
+                    b.Property<TimeSpan>("StartAtHours")
+                        .HasColumnType("time without time zone")
                         .HasColumnName("START_AT");
 
                     b.Property<DateTime?>("UpdatedAt")

@@ -34,8 +34,22 @@ namespace WebApi.VehiclesAuction.Api.Controllers
             _participantServices = participantServices;
         }
 
+        ///<remarks>
+        /// Cadastra o usuário com a role de Admin nas tabelas do Identity
+        /// </remarks>
+        /// <summary>
+        /// Cadastro de usuário
+        /// </summary>
+        /// <param name="registerViewModel">Parâmetros para cadastro de usuário Admin.</param>
+        /// <response code="200">Usuário cadastrado com sucesso</response>
+        /// <response code="400">Retorna erros de validação</response>
+        /// <response code="500">Retorna erros internos caso ocorram</response>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(JsonResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [HttpPost("register-admin-user")]
-        public async Task<IActionResult> RegisterAdminUser([FromBody] RegisterAdminUserViewModel registerViewModel, CancellationToken cancellationToken)
+        public async Task<IActionResult> RegisterAdminUser([FromBody] RegisterAdminUserViewModel registerViewModel)
         {
             if (!ModelState.IsValid)
                 return BadRequest(new JsonResponse(false, "Erro ao tentar realizar o cadastro. Por favor, verifique os campos e tente novamente."));
@@ -61,6 +75,21 @@ namespace WebApi.VehiclesAuction.Api.Controllers
         }
 
 
+        ///<remarks>
+        /// Cadastra o usuário com a role de Participant na tabela de Participant
+        /// </remarks>
+        /// <summary>
+        /// Cadastro de usuário
+        /// </summary>
+        /// <param name="registerViewModel">Parâmetros para cadastro de usuário Participant.</param>
+        /// <param name="cancellationToken">Cancellation Token para o cancelamento dos métodos assíncronos</param>
+        /// <response code="200">Usuário cadastrado com sucesso</response>
+        /// <response code="400">Retorna erros de validação</response>
+        /// <response code="500">Retorna erros internos caso ocorram</response>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(JsonResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [HttpPost("register-participant-user")]
         public async Task<IActionResult> RegisterUser([FromBody] RegisterUserViewModel registerViewModel, CancellationToken cancellationToken)
         {
@@ -91,6 +120,21 @@ namespace WebApi.VehiclesAuction.Api.Controllers
             return Ok(new JsonResponse(true, "Cadastro realizado com sucesso!"));
         }
 
+
+        ///<remarks>
+        /// Realiza a autenticação do usuário na API, independente da role. Retornando um Bearer Token.
+        /// </remarks>
+        /// <summary>
+        /// Autentização de Usuários
+        /// </summary>
+        /// <param name="loginViewModel">Parâmetros para autenticação dos usuários.</param>
+        /// <response code="200">Usuário autenticado com sucesso</response>
+        /// <response code="400">Retorna erros de validação</response>
+        /// <response code="500">Retorna erros internos caso ocorram</response>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(JsonResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserViewModel loginViewModel)
         {

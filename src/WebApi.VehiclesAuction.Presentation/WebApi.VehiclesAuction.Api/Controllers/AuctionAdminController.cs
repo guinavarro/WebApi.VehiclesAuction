@@ -24,6 +24,23 @@ namespace WebApi.VehiclesAuction.Api.Controllers
         }
 
 
+        ///<remarks>
+        /// Cadastra um leilão na base de dados.
+        /// É obrigatório inserir um nome e uma data de realização.
+        /// Não se preocupe com o horário da data, ela será salva na base com o início às "00:00:00" e o fim às "23:59:59" 
+        /// independente do valor cadastrado.
+        /// </remarks>
+        /// <summary>
+        /// Cadastra Leilão
+        /// </summary>
+        /// <param name="viewModel">Parâmetros para cadastro de leilão</param>
+        /// <response code="200">Cadastro realizado com sucesso.</response>
+        /// <response code="400">Retorna erros de validação</response>
+        /// <response code="500">Retorna erros internos caso ocorram</response>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(JsonResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [HttpPost("register-auction")]
         public async Task<IActionResult> RegisterAuction([FromBody] RegisterAuctionViewModel viewModel, CancellationToken cancellationToken)
         {
@@ -37,6 +54,25 @@ namespace WebApi.VehiclesAuction.Api.Controllers
 
             return Ok(new JsonResponse(true, "Leilão cadastrado com sucesso."));
         }
+
+        ///<remarks>
+        /// Cadastra uma lista de itens para um leilão.
+        /// Os dois tipos atuais são "1" para Carros e "2" para Motos.
+        /// Cadastre um horário para o leilão desse item com valores inteiros, sendo:
+        /// valores válidos para hora: 0-23 e
+        /// valores válidos para minuto: 0-59
+        /// </remarks>
+        /// <summary>
+        /// Cadastra Itens Leilão
+        /// </summary>
+        /// <param name="viewModel">Parâmetros para cadastro de itens leilão</param>
+        /// <response code="200">Cadastro realizado com sucesso.</response>
+        /// <response code="400">Retorna erros de validação</response>
+        /// <response code="500">Retorna erros internos caso ocorram</response>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(JsonResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [HttpPost("register-auction-items")]
         public async Task<IActionResult> RegisterAuctionItems([FromBody] RegisterAuctionItemsViewModel viewModel, CancellationToken cancellationToken)
         {
@@ -88,6 +124,20 @@ namespace WebApi.VehiclesAuction.Api.Controllers
             return Ok(new JsonResponse(true, createAuctionItems.Message!));
         }
 
+        ///<remarks>
+        /// Busca um leilão na base via Guid Key
+        /// </remarks>
+        /// <summary>
+        /// Busca Leilão por Id
+        /// </summary>
+        /// <param name="key">Parâmetros para busca de Leilão</param>
+        /// <response code="200">Busca realizada com sucesso.</response>
+        /// <response code="400">Retorna erros de validação</response>
+        /// <response code="500">Retorna erros internos caso ocorram</response>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(JsonResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [HttpGet("get-auction/{key}")]
         public async Task<IActionResult> GetAuctionByKey(Guid key, CancellationToken cancellationToken)
         {
@@ -99,6 +149,19 @@ namespace WebApi.VehiclesAuction.Api.Controllers
 
             return Ok(getAuction.Object!);
         }
+        ///<remarks>
+        /// Busca todos os leilões cadastrados independente da data ou do status
+        /// </remarks>
+        /// <summary>
+        /// Busca Leilões Cadastrados
+        /// </summary>
+        /// <response code="200">Busca realizada com sucesso.</response>
+        /// <response code="400">Retorna erros de validação</response>
+        /// <response code="500">Retorna erros internos caso ocorram</response>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(JsonResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [HttpGet("get-all-auctions")]
         public async Task<IActionResult> GetAllAuctions(CancellationToken cancellationToken)
         {
@@ -110,6 +173,20 @@ namespace WebApi.VehiclesAuction.Api.Controllers
             return Ok(getAuctions.Object!);
         }
 
+        ///<remarks>
+        /// Exclui um item de leilão da base de dados
+        /// </remarks>
+        /// <summary>
+        /// Exclui Item Leilão
+        /// </summary>
+        /// <param name="key">Parâmetros para exclusão de um item de Leilão</param>
+        /// <response code="200">Exclusão realizada com sucesso.</response>
+        /// <response code="400">Retorna erros de validação</response>
+        /// <response code="500">Retorna erros internos caso ocorram</response>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(JsonResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [HttpDelete("remove-auction-item/{key}")]
         public async Task<IActionResult> RemoveAuctionItem(Guid key, CancellationToken cancellationToken)
         {
@@ -121,6 +198,20 @@ namespace WebApi.VehiclesAuction.Api.Controllers
             return Ok(removeAuctionItem.Message);
         }
 
+        ///<remarks>
+        /// Exclui um leilão da base de dados
+        /// </remarks>
+        /// <summary>
+        /// Exclui Leilão
+        /// </summary>
+        /// <param name="key">Parâmetros para exclusão de Leilão</param>
+        /// <response code="200">Exclusão realizada com sucesso.</response>
+        /// <response code="400">Retorna erros de validação</response>
+        /// <response code="500">Retorna erros internos caso ocorram</response>
+        /// <returns></returns>
+        [ProducesResponseType(typeof(JsonResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
         [HttpDelete("remove-auction/{key}")]
         public async Task<IActionResult> RemoveAuction(Guid key, CancellationToken cancellationToken)
         {

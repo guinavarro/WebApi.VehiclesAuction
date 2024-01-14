@@ -5,5 +5,6 @@ namespace WebApi.VehiclesAuction.Domain.Interfaces.Repository
     public interface IBidRepository : IBaseRepository
     {
         Task<List<Bid>> GetBidWinnersByDate(DateTime date, CancellationToken cancellationToken = default);
+        Task<bool> UpdateWinnerStatus(Bid bid);
     }
 }
