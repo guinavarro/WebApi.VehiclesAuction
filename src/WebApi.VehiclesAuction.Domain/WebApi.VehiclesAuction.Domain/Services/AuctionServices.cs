@@ -1,4 +1,6 @@
-﻿using WebApi.VehiclesAuction.Domain.Interfaces.Clients;
+﻿using Hangfire.Console;
+using Hangfire.Server;
+using WebApi.VehiclesAuction.Domain.Interfaces.Clients;
 using WebApi.VehiclesAuction.Domain.Interfaces.Repository;
 using WebApi.VehiclesAuction.Domain.Interfaces.Services;
 using WebApi.VehiclesAuction.Domain.Models;
@@ -401,19 +403,32 @@ namespace WebApi.VehiclesAuction.Domain.Services
 
         // Criar um dos servicos que bate minuto a minuto pra ver os lances
 
-        public async Task NotifyDailyWinners()
+        public async Task NotifyDailyWinners(PerformContext? context)
         {
             try
             {
-                //var date = DateTime.Now.AddDays(1);
+                context.SetTextColor(ConsoleTextColor.Yellow);
+                context.WriteLine("*** Started Notify Winners ***");
+                context.ResetTextColor();
+                await Task.Delay(3000);
+
                 var date = DateTime.Now;
                 var bids = await _bidRepository.GetBidWinnersByDate(date);
 
+                context.WriteLine($"*** Verifying if we had bid winners at {date.ToString("dd/MM/yyyy")}***");
+                await Task.Delay(3000);
                 if (bids != null && bids.Any())
                 {
+                    context.WriteLine($"*** {bids.Count} bid winners finded ***");
+                    await Task.Delay(1000);
                     foreach (var bid in bids)
                     {
+                        context.WriteLine($"*** Starting {bid.AuctionItem.Item.Name} winner email send... ***");
+                        await Task.Delay(2000);
+
                         var winnerParticipant = bid.Participant;
+                        context.WriteLine($"***{winnerParticipant.Name} was the winner with a R${bid.Value}. Preparing the email send... ***");
+                        await Task.Delay(3000);
 
                         var email = winnerParticipant.Email;
                         var name = winnerParticipant.Name;
@@ -423,21 +438,36 @@ namespace WebApi.VehiclesAuction.Domain.Services
                         Você tem 3 dias úteis para realizar o pagamento do lance R${bid.Value}";
 
                         email = "marq@mailinator.com";
+                        context.WriteLine($"*** Sending email to {email}...***");
+                        await Task.Delay(2000);
 
                         await _emailSender.SendEmail(subject, email, name, message);
+                        context.WriteLine($"*** Email sent succesfuly ***");
                     }
                 }
+                else
+                {
+                    context.WriteLine("*** No bid winners finded ***");
+                }
             }
-            catch
+            catch (Exception ex)
             {
-
+                context.SetTextColor(ConsoleTextColor.Red);
+                context.WriteLine($"*** An internal error ocurred during job's execution. See the error message: {ex.Message}***");
+                context.ResetTextColor();
             }
         }
 
-        public async Task DailyAuctionsAudit()
+        public async Task DailyAuctionsAudit(PerformContext? context)
         {
             try
             {
+                context.SetTextColor(ConsoleTextColor.Yellow);
+                context.WriteLine("*** Started Auctions Item Audit ***");
+                context.ResetTextColor();
+                await Task.Delay(3000);
+
+                context.WriteLine("*** Verifying if we had any auction item finished until today ***");
                 var auctionsItem = await _auctionItemRepository.GetAuctionsItem();
                 auctionsItem = auctionsItem.Where(x => x.Auction.EndAt.Date >= DateTime.Now.Date).ToList();
 
@@ -446,29 +476,45 @@ namespace WebApi.VehiclesAuction.Domain.Services
 
                 if (auctionsItem != null && auctionsItem.Any())
                 {
+                    context.WriteLine($"*** {auctionsItem.Count} finished auctions item finded ***");
+                    await Task.Delay(3000);
                     foreach (var auctionItem in auctionsItem)
                     {
+                        context.WriteLine($"*** Verifying if they are happening ***");
+                        await Task.Delay(1000);
                         // Verifica se já se encerrou o leilão daquele item
                         if (DateTime.Now.Date >= auctionItem.Auction.EndAt.Date
                             && currenteDateTimeSpan >= auctionItem.EndAtHours)
                         {
+                            context.WriteLine($"*** Verifying if they are happening ***");
                             // Verifica se teve lances para aquele item
                             if (auctionItem.Bids != null && auctionItem.Bids.Any())
                             {
+                                context.WriteLine($"*** Auction Item {auctionItem.Item.Name} had {auctionItem.Bids} bids.***");
                                 // Pega o último lance de valor mais alto e define como vencedor
+                                context.WriteLine($"*** Starting audit...***");
                                 var higherBid = auctionItem.Bids.OrderByDescending(x => x.Value).FirstOrDefault();
-
                                 higherBid!.Winner = true;
+                                context.WriteLine($"*** Bid {higherBid.Key} of {auctionItem.Item.Name} was the winner, with a R${higherBid.Value} bid.***");
                                 await _auctionItemRepository.Update(higherBid);
                             }
                         }
                     }
                 }
+                else
+                {
+                    context.WriteLine($"*** No auctions item finished finded ***");
+                }
 
+                context.SetTextColor(ConsoleTextColor.Green);
+                context.WriteLine("*** Job Finished ***");
+                context.ResetTextColor();
             }
-            catch
+            catch (Exception ex)
             {
-                // TODO: adicionar Hangfire.Console;
+                context.SetTextColor(ConsoleTextColor.Red);
+                context.WriteLine($"*** An internal error ocurred during job's execution. See the error message: {ex.Message}***");
+                context.ResetTextColor();
             }
         }
 

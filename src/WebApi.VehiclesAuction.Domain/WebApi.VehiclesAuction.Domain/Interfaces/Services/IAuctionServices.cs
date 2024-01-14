@@ -1,4 +1,5 @@
-﻿using WebApi.VehiclesAuction.Domain.Models;
+﻿using Hangfire.Server;
+using WebApi.VehiclesAuction.Domain.Models;
 using WebApi.VehiclesAuction.Domain.Models.Entities;
 using WebApi.VehiclesAuction.Domain.Models.Models;
 
@@ -14,7 +15,7 @@ namespace WebApi.VehiclesAuction.Domain.Interfaces.Services
         Task<Response<bool>> BidItemAuction(Guid itemAuctionKey, decimal bidValue, int participantId, CancellationToken cancellationToken = default);
         Task<Response<bool>> RemoveAuctionItem(Guid itemAuctionKey, CancellationToken cancellationToken = default);
         Task<Response<bool>> RemoveAuction(Guid auctionKey, CancellationToken cancellationToken = default);
-        Task DailyAuctionsAudit();
-        Task NotifyDailyWinners();
+        Task DailyAuctionsAudit(PerformContext? perfomContext);
+        Task NotifyDailyWinners(PerformContext? perfomContext);
     }
 }

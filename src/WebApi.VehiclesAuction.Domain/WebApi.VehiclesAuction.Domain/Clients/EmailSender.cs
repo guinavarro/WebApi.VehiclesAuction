@@ -12,9 +12,9 @@ namespace WebApi.VehiclesAuction.Domain.Clients
         }
         public async Task SendEmail(string subject, string toEmail, string toUsername, string message)
         {
-            var apiKey = "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";
+            var apiKey = "";
             var client = new SendGridClient(apiKey);
-            var from = new EmailAddress("gusnavarro66@gmail.com", "Vehicle Auction API");
+            var from = new EmailAddress("", "Vehicle Auction API");
             var to = new EmailAddress(toEmail, toUsername);
             var plainTextContent = message;
             var htmlContent = string.Empty;
